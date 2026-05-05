@@ -1,6 +1,6 @@
 # Sistema de Gestão de Projetos e Equipes
 
-Atividade prática de Banco de Dados — implementação em PostgreSQL com os conceitos de **Entidade Fraca**, **Autorelacionamento** e **Agregação**
+Atividade Banco de Dados — implementação em PostgreSQL com os conceitos de **Entidade Fraca**, **Autorelacionamento** e **Agregação**
 
 ---
 
