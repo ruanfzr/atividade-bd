@@ -1,10 +1,10 @@
-# 🗄️ Sistema de Gestão de Projetos e Equipes
+# Sistema de Gestão de Projetos e Equipes
 
-Atividade prática de Banco de Dados — implementação em PostgreSQL com os conceitos de **Entidade Fraca**, **Autorelacionamento** e **Agregação**.
+Atividade prática de Banco de Dados — implementação em PostgreSQL com os conceitos de **Entidade Fraca**, **Autorelacionamento** e **Agregação**
 
 ---
 
-## 📐 Diagrama ER (Mermaid)
+## Diagrama
 
 ```mermaid
 erDiagram
@@ -58,7 +58,7 @@ erDiagram
 
 ---
 
-## 🔄 Como o Autorelacionamento foi aplicado
+## Como o Autorelacionamento foi aplicado
 
 A tabela `FUNCIONARIO` possui a coluna `id_gerente`, que é uma **chave estrangeira apontando para a própria tabela**. Isso permite modelar hierarquias de qualquer profundidade dentro de uma única tabela.
 
@@ -76,7 +76,7 @@ LEFT JOIN funcionario g ON f.id_gerente = g.id_funcionario;
 
 ---
 
-## 📦 Como a Agregação resolveu o uso de equipamentos em projetos
+## Como a Agregação resolveu o uso de equipamentos em projetos
 
 O problema central: um equipamento não pertence a um funcionário em geral, nem a um projeto em geral. Ele pertence a **"um funcionário trabalhando em um projeto específico"**.
 
@@ -91,7 +91,7 @@ PROJETO    ──┘
 
 ---
 
-## 🔗 Entidade Fraca — Dependente
+## Entidade Fraca — Dependente
 
 `DEPENDENTE` é uma entidade fraca porque **não possui identidade própria**: um dependente só existe enquanto o funcionário ao qual pertence existir.
 
@@ -99,21 +99,3 @@ PROJETO    ──┘
 - O `ON DELETE CASCADE` garante que ao deletar um funcionário, todos os seus dependentes são automaticamente removidos
 
 ---
-
-## 🗂️ Estrutura dos Arquivos
-
-```
-projeto-bd-agregacao/
-├── schema.sql   → CREATE TABLE, INSERT e SELECT de exemplo
-└── README.md    → Este arquivo
-```
-
----
-
-## ▶️ Como executar
-
-```bash
-# Criar o banco e rodar o schema
-psql -U postgres -c "CREATE DATABASE gestao_projetos;"
-psql -U postgres -d gestao_projetos -f schema.sql
-```
