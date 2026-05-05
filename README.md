@@ -1,6 +1,10 @@
 # Sistema de Gestão de Projetos e Equipes
 
-Atividade Banco de Dados — implementação em PostgreSQL com os conceitos de **Entidade Fraca**, **Autorelacionamento** e **Agregação**
+Atividade de Banco de Dados — implementação em PostgreSQL utilizando os conceitos de:
+
+- Entidade Fraca  
+- Autorelacionamento  
+- Agregação  
 
 ---
 
@@ -54,48 +58,136 @@ erDiagram
         int id_equipamento FK
         int quantidade
     }
-```
+````
+
+O diagrama representa:
+
+* O **autorelacionamento** em FUNCIONARIO (hierarquia de gerência)
+* A **entidade fraca DEPENDENTE**
+* A **agregação** entre FUNCIONARIO e PROJETO através de ALOCACAO
 
 ---
 
-## Como o Autorelacionamento foi aplicado
+## 📌 Autorelacionamento em FUNCIONARIO
 
-A tabela `FUNCIONARIO` possui a coluna `id_gerente`, que é uma **chave estrangeira apontando para a própria tabela**. Isso permite modelar hierarquias de qualquer profundidade dentro de uma única tabela.
+A tabela `FUNCIONARIO` possui a coluna `id_gerente`, que é uma chave estrangeira que referencia a própria tabela. Isso permite modelar hierarquias organizacionais.
 
-- O funcionário no topo da hierarquia tem `id_gerente = NULL`
-- Todos os outros funcionários apontam para o `id_funcionario` do seu superior direto
+* Funcionários no topo possuem `id_gerente = NULL`
+* Os demais apontam para seu supervisor direto
 
-**Consulta demonstrativa (dica do professor):**
+### 🔍 Consulta demonstrativa
+
 ```sql
 SELECT
-    f.nome   AS funcionario,
-    g.nome   AS supervisor
+    f.nome AS funcionario,
+    g.nome AS supervisor
 FROM funcionario f
-LEFT JOIN funcionario g ON f.id_gerente = g.id_funcionario;
+LEFT JOIN funcionario g 
+    ON f.id_gerente = g.id_funcionario;
 ```
+
+✔ O `LEFT JOIN` garante que funcionários sem supervisor também apareçam.
 
 ---
 
-## Como a Agregação resolveu o uso de equipamentos em projetos
+## 📌 Agregação: Uso de Equipamentos
 
-O problema central: um equipamento não pertence a um funcionário em geral, nem a um projeto em geral. Ele pertence a **"um funcionário trabalhando em um projeto específico"**.
+Problema:
 
-Para resolver isso, o relacionamento `ALOCACAO` (que conecta `FUNCIONARIO` e `PROJETO`) foi **elevado a entidade** — isso é a agregação. A tabela `ALOCACAO_EQUIPAMENTO` então referencia a `ALOCACAO`, ligando o equipamento ao par (funcionário + projeto), não a cada um isoladamente.
+> Um equipamento não pertence apenas a um funcionário ou a um projeto, mas sim ao contexto de um funcionário em um projeto.
 
-**Estrutura resultante:**
+### 💡 Solução
+
+O relacionamento entre `FUNCIONARIO` e `PROJETO` foi transformado na entidade `ALOCACAO`.
+
+A tabela `ALOCACAO_EQUIPAMENTO` referencia essa relação, ligando o equipamento ao par:
+
+ **(Funcionário + Projeto)**
+
+## Estrutura
+
 ```
 FUNCIONARIO ──┐
               ├──> ALOCACAO ──> ALOCACAO_EQUIPAMENTO <── EQUIPAMENTO
 PROJETO    ──┘
 ```
 
----
-
-## Entidade Fraca — Dependente
-
-`DEPENDENTE` é uma entidade fraca porque **não possui identidade própria**: um dependente só existe enquanto o funcionário ao qual pertence existir.
-
-- A **chave primária é composta**: `(id_dependente, id_funcionario)`
-- O `ON DELETE CASCADE` garante que ao deletar um funcionário, todos os seus dependentes são automaticamente removidos
+✔ Isso garante que o equipamento esteja associado corretamente ao contexto de uso.
 
 ---
+
+## Entidade Fraca — DEPENDENTE
+
+A entidade `DEPENDENTE` não possui identidade própria e depende diretamente de `FUNCIONARIO`.
+
+* Chave primária composta: `(id_dependente, id_funcionario)`
+* Sua existência depende do funcionário
+
+---
+
+## Uso de ON DELETE CASCADE
+
+O `ON DELETE CASCADE` foi utilizado na relação entre `FUNCIONARIO` e `DEPENDENTE`.
+
+### 💡 Justificativa
+
+Quando um funcionário é removido, seus dependentes também devem ser removidos automaticamente.
+
+```sql
+FOREIGN KEY (id_funcionario)
+REFERENCES funcionario(id_funcionario)
+ON DELETE CASCADE
+```
+
+ Garante:
+
+* Integridade referencial
+* Evita registros órfãos
+* Automatiza manutenção do banco
+
+---
+
+## Demonstração de Execução SQL
+
+### Inserção de dados
+
+```sql
+INSERT INTO funcionario (id_funcionario, nome) VALUES (1, 'Carlos');
+
+INSERT INTO dependente (id_dependente, id_funcionario, nome_dependente)
+VALUES (1, 1, 'Ana');
+```
+
+### Consulta
+
+```sql
+SELECT * FROM dependente;
+```
+
+### Resultado esperado
+
+```
+id_dependente | id_funcionario | nome_dependente
+--------------|----------------|----------------
+1             | 1              | Ana
+```
+
+---
+
+### Teste do CASCADE
+
+```sql
+DELETE FROM funcionario WHERE id_funcionario = 1;
+```
+
+Após isso:
+
+```sql
+SELECT * FROM dependente;
+```
+
+Resultado:
+
+```
+(0 registros)
+```
